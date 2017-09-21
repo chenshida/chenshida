@@ -12,20 +12,11 @@ def invPerspectiveTransform(dst_point, M_INV):
     return src_point
 if __name__ == '__main__':
     img = cv2.imread('test.png')
-    # img = cv2.imread('timg.png')
-
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    # img_trans = img.copy()
-    # ret, img = cv2.threshold(img, 180, 255, cv2.THRESH_BINARY_INV)
     cv2.imshow('image', img)
-    print img.shape
+    # print img.shape
     img_hight, img_width = img.shape
-    # print len(img)
-
     img_trans = np.zeros((img_hight, img_width), np.uint8)
-    # print img[0]
-    # point_src = np.float32([[519, 19], [848, 19], [14, 406], [1169, 406]])
-    # point_dst = np.float32([[14, 19], [1199, 20], [14, 422], [1199, 423]])
     point_src = np.float32([[30, 51], [156, 0], [0, 213], [135, 210]])
     point_dst = np.float32([[0, 0], [158, 0], [0, 210], [159, 213]])
     M = cv2.getPerspectiveTransform(point_src, point_dst)
@@ -71,41 +62,41 @@ if __name__ == '__main__':
         t = i+1
         if t < len(points):
             # print 'enter>>>>>>'
+            if points_1[t][0] < 0 or points_1[t][0] > (img_width-1) or points_1[t][1] < 0 or points_1[t][1] > (img_hight-1):
+                continue
             if abs((int(points_1[t][1]) - int(points_1[i][1]))) > 1 or abs((int(points_1[t][0]) - int(points_1[i][0]))) > 1 or\
                     ((abs((int(points_1[t][1]) - int(points_1[i][1])))) == 1 and (abs((int(points_1[t][0]) - int(points_1[i][0])))) == 1):
-            # if abs(int(points_1[t][1] - points_1[i][1])) > 1 or abs(int(points_1[t][0] - points_1[i][0])) > 1 or\
-            #         ((abs(int(points_1[t][1] - points_1[i][1]))) == 1 and (abs(int(points_1[t][0] - points_1[i][0])))) == 1:
-                # print 'begin>>>>>>>>'
+    
                 x_min = min(int(points_1[t][1]), int(points_1[i][1]))
-                x_max = max(int(points_1[t][1]), int(points_1[i][1]))
+                x_max = max(int(points_1[t][1]), int(points_1[i][1]))+1
                 y_min = min(int(points_1[t][0]), int(points_1[i][0]))
-                y_max = max(int(points_1[t][0]), int(points_1[i][0]))
+                y_max = max(int(points_1[t][0]), int(points_1[i][0]))+1
                 # print x_min, x_max, y_min, y_max
                 if x_min != x_max and y_min != y_max:
                     roi = img_trans[x_min:x_max, y_min:y_max]
                     roi = roi.reshape(-1)
-                    # print len(roi)
+                    print len(roi)
                     for index in range(0, len(roi)):
-                        roi[index] = img[points[i+1][1]][points[i+1][0]]
+                        roi[index] = img[points[t][1]][points[t][0]]
                     roi = roi.reshape(x_max-x_min, y_max-y_min)
                     img_trans[x_min:x_max, y_min:y_max] = roi
 
                 elif x_min == x_max and y_min != y_max:
                     roi = img_trans[x_min, y_min:y_max]
                     roi = roi.reshape(-1)
+                    print len(roi)
                     for index in range(0, len(roi)):
-                        roi[index] = img[points[i+1][1]][points[i+1][0]]
+                        roi[index] = img[points[t][1]][points[t][0]]
                     roi = roi.reshape(-1, y_max-y_min)
                     img_trans[x_min, y_min:y_max] = roi
                 elif y_min == y_max and x_min != y_min:
                     roi = img_trans[x_min:x_max, y_min]
                     roi = roi.reshape(-1)
+                    print len(roi)
                     for index in range(0, len(roi)):
-                        roi[index] = img[points[i+1][1]][points[i+1][0]]
+                        roi[index] = img[points[t][1]][points[t][0]]
                     roi = roi.reshape(x_max-x_min, -1)
                     img_trans[x_min:x_max, y_min] = roi
-
-                # print roi
 
         # if points_1[i+1][0] != points_1[i][0]:
         #     pts = invPerspectiveTransform([int(points_1[i][1]), int(points_1[i+1][0])], M_INV)
@@ -116,21 +107,19 @@ if __name__ == '__main__':
         #     else:
         #         img_trans[int(points_1[i][1])][int(points_1[i+1][0])] = img[pts[0]][pts[1]]
         # img_trans[int(points[i][1])][int(points[i][0])] = img[int(points_1[i][1])][int(points_1[i][0])]
-    for ii in range(0, img_hight):
-        for jj in range(0, img_width):
-            if img_trans[ii][jj] == 0:
-                # print ii, jj
-                pts = invPerspectiveTransform([ii, jj], M_INV)
-                # print pts
-                if pts[1] < 0 or pts[1] > (img_width-1) or pts[0] < 0 or pts[0] > (img_hight-1):
-                    continue
-                img_trans[ii][jj] = img[pts[0]][pts[1]]
+    # for ii in range(0, img_hight):
+    #     for jj in range(0, img_width):
+    #         if img_trans[ii][jj] == 0:
+    #             print ii, jj
+    #             pts = invPerspectiveTransform([ii, jj], M_INV)
+    #             # print pts
+    #             if pts[1] < 0 or pts[1] > (img_width-1) or pts[0] < 0 or pts[0] > (img_hight-1):
+    #                 continue
+    #             img_trans[ii][jj] = img[pts[0]][pts[1]]
     img_perspect = cv2.warpPerspective(img, M, (img_width, img_hight))
     cv2.imshow('image_1', img_perspect)
-    cv2.namedWindow('image1', flags=cv2.WINDOW_NORMAL)
-    # img_trans = cv2.GaussianBlur(img_trans, (3, 3), 0.2)
-
-    # img_trans = cv2.blur(img_trans, (3, 3))
+    # cv2.namedWindow('image1', flags=cv2.WINDOW_NORMAL)
     # img_trans = cv2.medianBlur(img_trans, 3)
     cv2.imshow('image1', img_trans)
+    # cv2.imwrite('img_trans.png', img_trans)
     cv2.waitKey(0)
